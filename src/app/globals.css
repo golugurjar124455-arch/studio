@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 285 20% 8%;
+    --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: 285 25% 12%;
+    --card: 240 10% 8%;
     --card-foreground: 0 0% 98%;
-    --popover: 285 20% 8%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 275 80% 62%;
+    --primary: 24.6 95% 53.1%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 233 100% 77%;
-    --secondary-foreground: 285 20% 8%;
-    --muted: 285 20% 20%;
-    --muted-foreground: 285 10% 70%;
-    --accent: 233 100% 77%;
-    --accent-foreground: 285 20% 8%;
-    --destructive: 0 84% 60%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 285 20% 20%;
-    --input: 285 20% 20%;
-    --ring: 275 80% 62%;
-    --radius: 2rem;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 24.6 95% 53.1%;
+    --radius: 1rem;
   }
 }
 
@@ -32,19 +32,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-primary/30;
+    @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tight;
+    @apply font-headline tracking-tighter;
   }
-}
-
-.bento-card {
-  @apply bg-card border border-white/5 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:bg-card/80;
-}
-
-.neon-glow {
-  box-shadow: 0 0 15px theme('colors.primary.DEFAULT / 20%');
 }
 
 .scroll-hide::-webkit-scrollbar {
@@ -55,6 +47,6 @@
   scrollbar-width: none;
 }
 
-.glass-morphism {
-  @apply bg-white/[0.03] backdrop-blur-xl border border-white/10;
+.crypto-card {
+  @apply bg-zinc-900 border border-white/5 shadow-2xl transition-all duration-300;
 }
