@@ -6,8 +6,7 @@ import {
   setDoc, 
   updateDoc, 
   deleteDoc, 
-  addDoc,
-  serverTimestamp
+  addDoc
 } from 'firebase/firestore';
 import { getFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -78,10 +77,8 @@ export function addTransaction(
     date: new Date().toISOString(),
   };
   
-  // Add transaction to subcollection
   addDoc(collection(db, 'investors', clientId, 'transactions'), newTransaction);
   
-  // Calculate new totals
   let newInvested = currentInvested;
   let newCurrentValue = currentValue;
 
@@ -92,7 +89,6 @@ export function addTransaction(
     newCurrentValue -= amount;
   }
 
-  // Update parent client document
   updateDoc(clientRef, {
     investedAmount: newInvested,
     currentValue: newCurrentValue,
