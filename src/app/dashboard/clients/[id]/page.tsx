@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, TrendingDown, Edit2, Share2, Activity, ArrowUp, ArrowDown, Info, BarChart3 } from "lucide-react";
-import { getClients, deleteClient, addTransaction, getSettings } from "@/lib/db";
-import { ClientRecord, ChartDataPoint, SystemSettings } from "@/lib/types";
+import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, TrendingDown, Edit2, Share2, Activity, ArrowUp, ArrowDown, BarChart3, Loader2 } from "lucide-react";
+import { useDoc, useCollection, useFirestore } from "@/firebase";
+import { doc, collection, query, orderBy, limit } from "firebase/firestore";
+import { addTransaction, deleteClient } from "@/lib/db";
+import { ClientRecord, Transaction, SystemSettings } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, Tooltip, Cell, ReferenceLine } from "recharts";
@@ -14,64 +16,64 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 export default function ClientDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [client, setClient] = useState<ClientRecord | null>(null);
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const db = useFirestore();
+  
+  const { data: client, loading: clientLoading } = useDoc<ClientRecord>(doc(db, 'investors', id as string));
+  const { data: settings } = useDoc<SystemSettings>(doc(db, 'settings', 'global'));
+  
+  const transactionsQuery = useMemo(() => {
+    return query(collection(db, 'investors', id as string, 'transactions'), orderBy('date', 'desc'), limit(10));
+  }, [db, id]);
+  
+  const { data: transactions = [] } = useCollection<Transaction>(transactionsQuery);
+
   const [amount, setAmount] = useState("");
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-  useEffect(() => {
-    const clients = getClients();
-    const found = clients.find(c => c.id === id);
-    if (found) setClient(found);
-    setSettings(getSettings());
-  }, [id]);
+  if (clientLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0a0a0c]">
+        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+      </div>
+    );
+  }
 
-  if (!client || !settings) return null;
+  if (!client) return <div className="p-6 text-white">Investor not found.</div>;
 
-  const performance = (client.profitLoss / (client.investedAmount || 1)) * 100;
+  const currencySymbol = settings?.currencySymbol || '₹';
+  const performance = client.investedAmount > 0 ? (client.profitLoss / client.investedAmount) * 100 : 0;
 
   const handleDeposit = () => {
     const val = Number(amount);
     if (isNaN(val) || val <= 0) return;
-    addTransaction(client.id, 'deposit', val);
+    addTransaction(client.id, 'deposit', val, client.investedAmount, client.currentValue);
     setAmount("");
-    refreshData();
   };
 
   const handleWithdrawalSubmit = () => {
     const val = Number(amount);
-    if (isNaN(val) || val <= 0) return;
+    if (isNaN(val) || val <= 0 || !settings) return;
     
     const gst = (val * settings.gstRate) / 100;
     const upi = (val * settings.upiRate) / 100;
     
-    addTransaction(client.id, 'withdrawal', val, { gst, upi });
+    addTransaction(client.id, 'withdrawal', val, client.investedAmount, client.currentValue, { gst, upi });
     setAmount("");
     setIsWithdrawModalOpen(false);
-    refreshData();
-  };
-
-  const refreshData = () => {
-    const clients = getClients();
-    setClient(clients.find(c => c.id === id) || null);
   };
 
   const handleWhatsAppShare = () => {
     const reportDate = new Date().toLocaleDateString();
-    const text = `🚀 *PRO PERFORMANCE REPORT*\n\n*Investor:* ${client.name}\n*Platform:* ${client.platform}\n*Ref Date:* ${reportDate}\n\n📊 *Asset Summary*\n- Initial: ${settings.currencySymbol}${client.investedAmount.toLocaleString()}\n- Valuation: ${settings.currencySymbol}${client.currentValue.toLocaleString()}\n- Net Yield: ${settings.currencySymbol}${client.profitLoss.toLocaleString()} (${performance.toFixed(2)}%)\n\n*Market Analysis:* The portfolio exhibits ${performance >= 0 ? 'bullish accumulation' : 'bearish pressure'}. Recommended action: HOLD.\n\n_Generated via ${settings.platformName} Terminal_`;
+    const text = `🚀 *PRO PERFORMANCE REPORT*\n\n*Investor:* ${client.name}\n*Platform:* ${client.platform}\n*Ref Date:* ${reportDate}\n\n📊 *Asset Summary*\n- Initial: ${currencySymbol}${client.investedAmount.toLocaleString()}\n- Valuation: ${currencySymbol}${client.currentValue.toLocaleString()}\n- Net Yield: ${currencySymbol}${client.profitLoss.toLocaleString()} (${performance.toFixed(2)}%)\n\n*Market Analysis:* The portfolio exhibits ${performance >= 0 ? 'bullish accumulation' : 'bearish pressure'}. Recommended action: HOLD.\n\n_Generated via ${settings?.platformName || 'CoinTrack Pro'}_`;
     const url = `https://wa.me/${client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
-  // Improved Candle-like data representation
-  const candleData = client.transactions.map((t, i) => {
-    const prevValue = i === 0 ? 0 : client.transactions.slice(0, i).reduce((sum, tr) => sum + (tr.type === 'deposit' ? tr.amount : -tr.amount), 0);
-    const currentValue = prevValue + (t.type === 'deposit' ? t.amount : -t.amount);
+  const candleData = [...transactions].reverse().map((t, i, arr) => {
+    const prevValue = i === 0 ? client.investedAmount - t.amount : 0; // Simplified for demo
     return {
       date: new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      open: prevValue,
-      close: currentValue,
-      amt: currentValue,
+      value: t.amount,
       type: t.type
     };
   });
@@ -110,12 +112,11 @@ export default function ClientDetailsPage() {
         </div>
       </section>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[#161618] p-5 rounded-2xl border border-white/5 space-y-1 relative overflow-hidden group">
+        <div className="bg-[#161618] p-5 rounded-2xl border border-white/5 space-y-1 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Base Principal</p>
-          <p className="text-xl font-bold text-white">{settings.currencySymbol}{client.investedAmount.toLocaleString()}</p>
+          <p className="text-xl font-bold text-white">{currencySymbol}{client.investedAmount.toLocaleString()}</p>
         </div>
         <div className={`bg-[#161618] p-5 rounded-2xl border border-white/5 space-y-1 relative overflow-hidden ${client.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
           <div className={`absolute top-0 left-0 w-1 h-full ${client.profitLoss >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -129,52 +130,40 @@ export default function ClientDetailsPage() {
         </div>
       </div>
 
-      {/* Financial Market Chart */}
       <section className="bg-[#161618] p-6 rounded-3xl border border-white/5 space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-orange-500" />
             Performance Terminal
           </h3>
-          <div className="flex gap-2">
-             <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-[9px] text-zinc-500 font-bold uppercase">Bull</span>
-             </div>
-             <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-[9px] text-zinc-500 font-bold uppercase">Bear</span>
-             </div>
-          </div>
         </div>
         
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={candleData}>
-              <XAxis dataKey="date" hide />
-              <YAxis hide domain={['auto', 'auto']} />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: '#fff' }}
-                labelStyle={{ color: '#71717a', fontSize: '10px', fontWeight: 'bold' }}
-              />
-              <ReferenceLine y={0} stroke="#333" strokeDasharray="3 3" />
-              <Bar dataKey="close" barSize={20} radius={[4, 4, 0, 0]}>
-                {candleData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={entry.close >= entry.open ? '#22c55e' : '#ef4444'} 
-                    fillOpacity={0.6}
-                    stroke={entry.close >= entry.open ? '#22c55e' : '#ef4444'}
-                    strokeWidth={1}
-                  />
-                ))}
-              </Bar>
-            </ComposedChart>
-          </ResponsiveContainer>
+        <div className="h-48 w-full">
+          {candleData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={candleData}>
+                <XAxis dataKey="date" hide />
+                <YAxis hide domain={['auto', 'auto']} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#18181b', border: 'none', borderRadius: '12px', color: '#fff' }}
+                />
+                <Bar dataKey="value" barSize={20} radius={[4, 4, 0, 0]}>
+                  {candleData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.type === 'deposit' ? '#22c55e' : '#ef4444'} 
+                      fillOpacity={0.6}
+                    />
+                  ))}
+                </Bar>
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-zinc-600 text-[10px] font-bold uppercase">No Transactions Yet</div>
+          )}
         </div>
       </section>
 
-      {/* Asset Controls */}
       <section className="bg-[#161618] p-6 rounded-3xl border border-white/5 space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Terminal Actions</h3>
@@ -182,7 +171,7 @@ export default function ClientDetailsPage() {
         </div>
         <div className="space-y-4">
           <div className="relative">
-             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">{settings.currencySymbol}</span>
+             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">{currencySymbol}</span>
              <Input 
                 type="number" 
                 placeholder="0.00" 
@@ -216,7 +205,6 @@ export default function ClientDetailsPage() {
         Broadcast Report
       </Button>
 
-      {/* Professional Withdrawal Settlement */}
       <Dialog open={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen}>
         <DialogContent className="bg-[#161618] border-white/5 text-white rounded-[2rem]">
           <DialogHeader>
@@ -230,17 +218,17 @@ export default function ClientDetailsPage() {
             <div className="bg-[#0a0a0c] p-4 rounded-2xl border border-white/5 space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-500 font-bold uppercase text-[10px]">Requested Principal</span>
-                <span className="font-bold text-white">{settings.currencySymbol}{Number(amount).toLocaleString()}</span>
+                <span className="font-bold text-white">{currencySymbol}{Number(amount).toLocaleString()}</span>
               </div>
               
               <div className="space-y-2 pt-2 border-t border-white/5">
                 <div className="flex justify-between items-center text-[11px] text-red-400">
-                  <span className="flex items-center gap-1">Regulatory GST ({settings.gstRate}%)</span>
-                  <span>-{settings.currencySymbol}{((Number(amount) * settings.gstRate) / 100).toLocaleString()}</span>
+                  <span className="flex items-center gap-1">Regulatory GST ({settings?.gstRate ?? 18}%)</span>
+                  <span>-{currencySymbol}{((Number(amount) * (settings?.gstRate ?? 18)) / 100).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px] text-red-400">
-                  <span className="flex items-center gap-1">UPI Processing ({settings.upiRate}%)</span>
-                  <span>-{settings.currencySymbol}{((Number(amount) * settings.upiRate) / 100).toLocaleString()}</span>
+                  <span className="flex items-center gap-1">UPI Processing ({settings?.upiRate ?? 2}%)</span>
+                  <span>-{currencySymbol}{((Number(amount) * (settings?.upiRate ?? 2)) / 100).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -248,7 +236,7 @@ export default function ClientDetailsPage() {
             <div className="flex flex-col items-center py-4 space-y-1">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Net Credit Amount</span>
               <span className="text-4xl font-bold text-green-400 tracking-tighter">
-                {settings.currencySymbol}{(Number(amount) - (Number(amount) * (settings.gstRate + settings.upiRate) / 100)).toLocaleString()}
+                {currencySymbol}{(Number(amount) - (Number(amount) * ((settings?.gstRate ?? 18) + (settings?.upiRate ?? 2)) / 100)).toLocaleString()}
               </span>
             </div>
           </div>

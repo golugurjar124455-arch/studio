@@ -1,7 +1,6 @@
 'use client';
 
-// Firebase configuration using environment variables
-// इन वैल्यूज को आप Firebase Console -> Project Settings से बदल सकते हैं
+// Firebase configuration
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAs-Fake-Key-For-Setup",
   authDomain: `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "cointrack-pro-dev"}.firebaseapp.com`,
