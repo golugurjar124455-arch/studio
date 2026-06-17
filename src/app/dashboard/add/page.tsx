@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Phone, Wallet, TrendingUp, Save, BarChart3, Globe } from "lucide-react";
+import { ArrowLeft, User, Phone, Wallet, TrendingUp, Save, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,7 @@ export default function AddClientPage() {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    platform: "Mutual Funds",
+    platform: "Stocks",
     investedAmount: "",
     currentValue: "",
   });
@@ -28,9 +28,6 @@ export default function AddClientPage() {
       platform: formData.platform as any,
       investedAmount: Number(formData.investedAmount),
       currentValue: Number(formData.currentValue),
-      stocks: 0,
-      mutualFunds: 0,
-      gold: 0,
     });
     router.push("/dashboard/clients");
   };
@@ -69,7 +66,7 @@ export default function AddClientPage() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Market Settings</h2>
+            <h2 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">Trading Platform</h2>
             <div className="relative">
               <Globe className="absolute left-4 top-4 h-5 w-5 text-zinc-600 z-10" />
               <Select onValueChange={(val) => setFormData({ ...formData, platform: val })} defaultValue={formData.platform}>
@@ -77,11 +74,15 @@ export default function AddClientPage() {
                   <SelectValue placeholder="Select Platform" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                  <SelectItem value="Codex">Codex</SelectItem>
-                  <SelectItem value="Binance">Binance (Crypto)</SelectItem>
+                  <SelectItem value="Forex">Forex (Currency)</SelectItem>
+                  <SelectItem value="Crypto">Crypto (Binance/etc)</SelectItem>
+                  <SelectItem value="Stocks">Stock Market</SelectItem>
                   <SelectItem value="Mutual Funds">Mutual Funds</SelectItem>
-                  <SelectItem value="Stock Market">Stock Market</SelectItem>
-                  <SelectItem value="Other">Other Platform</SelectItem>
+                  <SelectItem value="Commodities">Commodities (Gold/Oil)</SelectItem>
+                  <SelectItem value="Options">Options & Futures</SelectItem>
+                  <SelectItem value="Indices">Market Indices</SelectItem>
+                  <SelectItem value="Codex">Codex Platform</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

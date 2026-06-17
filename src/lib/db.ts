@@ -91,15 +91,14 @@ export function addTransaction(
       
       const newTransactions = [...c.transactions, newTransaction];
       
-      // Withdrawals reduce current value, Deposits increase invested amount
       let newInvested = c.investedAmount;
       let newCurrentValue = c.currentValue;
 
       if (type === 'deposit') {
         newInvested += amount;
-        newCurrentValue += amount; // Assuming deposit increases value immediately
+        newCurrentValue += amount;
       } else {
-        newCurrentValue -= amount; // Withdrawal reduces total asset value
+        newCurrentValue -= amount;
       }
 
       return {

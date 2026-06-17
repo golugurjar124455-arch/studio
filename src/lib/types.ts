@@ -23,7 +23,7 @@ export interface ClientRecord {
   id: string;
   name: string;
   phone: string;
-  platform: 'Codex' | 'Binance' | 'Mutual Funds' | 'Stock Market' | 'Other';
+  platform: 'Forex' | 'Crypto' | 'Stocks' | 'Mutual Funds' | 'Commodities' | 'Options' | 'Indices' | 'Codex' | 'Other';
   investedAmount: number;
   currentValue: number;
   profitLoss: number;
