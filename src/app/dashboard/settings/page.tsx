@@ -9,71 +9,73 @@ export default function SettingsPage() {
   const router = useRouter();
 
   const handleLogout = () => {
-    clearSession();
-    router.push("/");
+    if (confirm("Sign out of professional account?")) {
+      clearSession();
+      router.push("/");
+    }
   };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8 bg-zinc-950 min-h-screen">
       <header className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors">
-          <ArrowLeft className="w-5 h-5 text-white" />
+        <button onClick={() => router.back()} className="p-3 rounded-2xl bg-zinc-900 border border-white/5 text-zinc-400">
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-2xl font-headline font-bold text-white">सेटिंग्स</h1>
+        <h1 className="text-2xl font-headline font-bold text-white tracking-tighter">System Settings</h1>
       </header>
 
       <div className="space-y-4">
-        <div className="bento-card rounded-[2rem] overflow-hidden">
+        <div className="bg-zinc-900 border border-white/5 rounded-[2rem] overflow-hidden">
           <div className="p-6 border-b border-white/5 flex items-center justify-between hover:bg-white/5 cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
                 <Shield className="w-5 h-5" />
               </div>
-              <p className="font-bold text-white">सुरक्षा</p>
+              <p className="font-bold text-white">Security</p>
             </div>
-            <p className="text-xs text-muted-foreground font-medium">पिन बदलें</p>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Update PIN</p>
           </div>
           <div className="p-6 border-b border-white/5 flex items-center justify-between hover:bg-white/5 cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
                 <Moon className="w-5 h-5" />
               </div>
-              <p className="font-bold text-white">थीम</p>
+              <p className="font-bold text-white">Theme</p>
             </div>
-            <p className="text-xs text-primary font-bold">डार्क मोड</p>
+            <p className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">Dark Mode</p>
           </div>
           <div className="p-6 flex items-center justify-between hover:bg-white/5 cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
                 <Database className="w-5 h-5" />
               </div>
-              <p className="font-bold text-white">डेटा</p>
+              <p className="font-bold text-white">Data</p>
             </div>
-            <p className="text-xs text-muted-foreground font-medium">एक्सपोर्ट</p>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Export CSV</p>
           </div>
         </div>
 
-        <div className="bento-card rounded-[2rem] p-6 space-y-4">
+        <div className="bg-zinc-900 border border-white/5 rounded-[2rem] p-6 space-y-4">
           <div className="flex items-center gap-4">
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
               <Info className="w-5 h-5" />
             </div>
-            <p className="font-bold text-white">ऐप के बारे में</p>
+            <p className="font-bold text-white">About System</p>
           </div>
           <div className="space-y-2 px-1">
-            <p className="text-xs text-muted-foreground">वर्जन: 1.0.0 (डेमो)</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              यह एक सुरक्षित निवेश ट्रैकिंग डेमो ऐप है। आपका सारा डेटा आपके ब्राउज़र के लोकल स्टोरेज में ही रहता है।
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Version: 2.1.0 PRO</p>
+            <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+              Professional local-first architecture. All data is encrypted and stored locally on your device for maximum privacy.
             </p>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="w-full p-6 bento-card rounded-[2rem] flex items-center justify-center gap-3 bg-rose-500/10 border-rose-500/20 text-rose-500 hover:bg-rose-500/20 transition-all font-bold"
+          className="w-full p-6 bg-zinc-900 border border-white/5 rounded-[2rem] flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-all font-bold"
         >
           <LogOut className="w-5 h-5" />
-          लॉगआउट करें
+          Sign Out
         </button>
       </div>
 
