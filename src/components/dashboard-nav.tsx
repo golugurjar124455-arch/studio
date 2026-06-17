@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Search, ShieldCheck } from "lucide-react";
+import { Home, Users, Search, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function DashboardNav() {
@@ -12,7 +13,7 @@ export function DashboardNav() {
     { href: "/dashboard", icon: Home, label: "Market" },
     { href: "/dashboard/clients", icon: Users, label: "Investors" },
     { href: "/dashboard/search", icon: Search, label: "Search" },
-    { href: "/dashboard/settings", icon: ShieldCheck, label: "Admin" },
+    { href: "/dashboard/admin", icon: ShieldAlert, label: "Admin" },
   ];
 
   return (
