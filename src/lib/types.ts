@@ -4,6 +4,9 @@ export interface ClientRecord {
   phone: string;
   investedAmount: number;
   currentValue: number;
+  stocks: number;
+  mutualFunds: number;
+  gold: number;
   profitLoss: number;
   updatedAt: string;
 }

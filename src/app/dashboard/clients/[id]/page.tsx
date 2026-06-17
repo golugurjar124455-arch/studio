@@ -1,13 +1,13 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, Sparkles, TrendingDown, Edit2 } from "lucide-react";
+import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, Sparkles, TrendingDown, Edit2, Share2, PieChart as PieIcon } from "lucide-react";
 import { getClients, deleteClient } from "@/lib/db";
 import { ClientRecord } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function ClientDetailsPage() {
   const { id } = useParams();
@@ -23,14 +23,13 @@ export default function ClientDetailsPage() {
 
   if (!client) return null;
 
-  const handleDelete = () => {
-    if (confirm("क्या आप वाकई इस क्लाइंट को हटाना चाहते हैं?")) {
-      deleteClient(client.id);
-      router.push("/dashboard/clients");
-    }
-  };
-
   const performance = (client.profitLoss / client.investedAmount) * 100;
+
+  const handleWhatsAppShare = () => {
+    const text = `नमस्ते ${client.name},\n\nआपके निवेश का संक्षिप्त विवरण:\n🔹 निवेशित राशि: ₹${client.investedAmount.toLocaleString()}\n🔹 वर्तमान वैल्यू: ₹${client.currentValue.toLocaleString()}\n🔹 कुल लाभ/हानि: ₹${client.profitLoss.toLocaleString()} (${performance.toFixed(2)}%)\n\n${narrative || "आपका निवेश सही दिशा में बढ़ रहा है।"}\n\nधन्यवाद!`;
+    const url = `https://wa.me/91${client.phone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
 
   const generateLocalNarrative = () => {
     let text = "";
@@ -57,8 +56,14 @@ export default function ClientDetailsPage() {
     setNarrative(text);
   };
 
+  const allocationData = [
+    { name: 'Stocks', value: client.stocks || 0, color: '#8b5cf6' },
+    { name: 'Mutual Funds', value: client.mutualFunds || 0, color: '#3b82f6' },
+    { name: 'Gold', value: client.gold || 0, color: '#fbbf24' },
+  ].filter(item => item.value > 0);
+
   return (
-    <div className="p-6 space-y-8 animate-in fade-in duration-500">
+    <div className="p-6 space-y-8 animate-in fade-in duration-500 pb-32">
       <header className="flex items-center justify-between">
         <button onClick={() => router.back()} className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors">
           <ArrowLeft className="w-5 h-5 text-white" />
@@ -98,18 +103,6 @@ export default function ClientDetailsPage() {
           </div>
         </div>
 
-        <div className="bento-card p-6 rounded-[2rem] flex items-center justify-between bg-white/[0.02]">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-secondary/10 text-secondary">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">वर्तमान वैल्यू</p>
-              <p className="text-2xl font-headline font-bold text-white">₹{client.currentValue.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-
         <div className={`bento-card p-6 rounded-[2rem] flex items-center justify-between ${client.profitLoss >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-2xl ${client.profitLoss >= 0 ? 'bg-emerald-400/20' : 'bg-rose-400/20'}`}>
@@ -125,6 +118,46 @@ export default function ClientDetailsPage() {
           </div>
         </div>
       </div>
+
+      {allocationData.length > 0 && (
+        <section className="bento-card p-6 rounded-[2rem] space-y-4">
+           <div className="flex items-center gap-2">
+            <PieIcon className="w-4 h-4 text-primary" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-widest">इन्वेस्टमेंट ब्रेकडाउन</h3>
+          </div>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={allocationData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {allocationData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1a1424', border: 'none', borderRadius: '12px', color: '#fff' }}
+                  formatter={(value: number) => `₹${value.toLocaleString()}`}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-4">
+            {allocationData.map((item) => (
+              <div key={item.name} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -143,9 +176,16 @@ export default function ClientDetailsPage() {
 
         {narrative ? (
           <div className="p-6 bento-card rounded-[2rem] bg-primary/5 border-primary/20 animate-in zoom-in duration-300">
-            <p className="text-sm leading-relaxed text-white font-medium italic">
+            <p className="text-sm leading-relaxed text-white font-medium italic mb-4">
               "{narrative}"
             </p>
+            <Button 
+              onClick={handleWhatsAppShare}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl gap-2 font-bold h-12"
+            >
+              <Share2 className="w-4 h-4" />
+              WhatsApp पर शेयर करें
+            </Button>
           </div>
         ) : (
           <div className="p-10 text-center bento-card rounded-[2rem] border-dashed bg-transparent border-white/5">
@@ -155,4 +195,11 @@ export default function ClientDetailsPage() {
       </section>
     </div>
   );
+
+  function handleDelete() {
+    if (confirm("क्या आप वाकई इस क्लाइंट को हटाना चाहते हैं?")) {
+      deleteClient(client!.id);
+      router.push("/dashboard/clients");
+    }
+  }
 }

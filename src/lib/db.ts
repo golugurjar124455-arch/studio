@@ -32,8 +32,8 @@ export function updateClient(id: string, updates: Partial<ClientRecord>) {
   const updatedClients = clients.map(c => {
     if (c.id === id) {
       const merged = { ...c, ...updates, updatedAt: new Date().toISOString() };
-      merged.profitLoss = merged.currentValue - merged.investedAmount;
-      return merged;
+      merged.profitLoss = (merged.currentValue || 0) - (merged.investedAmount || 0);
+      return merged as ClientRecord;
     }
     return c;
   });
