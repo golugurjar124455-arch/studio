@@ -2,6 +2,12 @@ export interface Transaction {
   id: string;
   type: 'deposit' | 'withdrawal';
   amount: number;
+  fees?: {
+    gst: number;
+    upi: number;
+    total: number;
+  };
+  netAmount?: number;
   date: string;
 }
 
@@ -23,6 +29,13 @@ export interface ClientRecord {
   profitLoss: number;
   transactions: Transaction[];
   updatedAt: string;
+}
+
+export interface SystemSettings {
+  gstRate: number;
+  upiRate: number;
+  currencySymbol: string;
+  platformName: string;
 }
 
 export interface UserSession {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Users, Search, Settings, LogOut, Activity } from "lucide-react";
+import { Home, Users, Search, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clearSession } from "@/lib/db";
 
@@ -25,7 +25,7 @@ export function DashboardNav() {
   ];
 
   return (
-    <nav className="fixed bottom-6 left-6 right-6 max-w-md mx-auto bg-zinc-900/80 backdrop-blur-2xl border border-white/5 px-6 py-4 flex justify-between items-center z-50 rounded-[2.5rem] shadow-2xl">
+    <nav className="fixed bottom-6 left-6 right-6 max-w-md mx-auto bg-[#161618]/90 backdrop-blur-2xl border border-white/5 px-6 py-4 flex justify-between items-center z-50 rounded-[2.5rem] shadow-2xl">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;
@@ -35,12 +35,12 @@ export function DashboardNav() {
             href={item.href}
             className={cn(
               "flex flex-col items-center gap-1 transition-all duration-300",
-              isActive ? "text-orange-500 scale-110" : "text-zinc-500 hover:text-white"
+              isActive ? "text-purple-500 scale-110" : "text-zinc-500 hover:text-white"
             )}
           >
             <div className={cn(
               "p-2 rounded-xl transition-all",
-              isActive ? "bg-orange-500/10" : ""
+              isActive ? "bg-purple-500/10" : ""
             )}>
               <Icon className="w-6 h-6" />
             </div>

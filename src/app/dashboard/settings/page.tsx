@@ -1,12 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Shield, Info, LogOut, Moon, Database } from "lucide-react";
-import { clearSession } from "@/lib/db";
+import { ArrowLeft, Shield, Info, LogOut, Percent, Globe, Layout, Save } from "lucide-react";
+import { clearSession, getSettings, saveSettings } from "@/lib/db";
+import { SystemSettings } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DemoModeBadge } from "@/components/ui/demo-mode-badge";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
+
+  useEffect(() => {
+    setSettings(getSettings());
+  }, []);
+
+  const handleSave = () => {
+    if (settings) {
+      saveSettings(settings);
+      toast({
+        title: "Settings Saved",
+        description: "Your system configuration has been updated.",
+      });
+    }
+  };
 
   const handleLogout = () => {
     if (confirm("Sign out of professional account?")) {
@@ -15,64 +36,82 @@ export default function SettingsPage() {
     }
   };
 
+  if (!settings) return null;
+
   return (
-    <div className="p-6 space-y-8 bg-zinc-950 min-h-screen">
+    <div className="p-6 space-y-8 bg-[#0a0a0c] min-h-screen text-white">
       <header className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-3 rounded-2xl bg-zinc-900 border border-white/5 text-zinc-400">
+        <button onClick={() => router.back()} className="p-3 rounded-2xl bg-[#161618] border border-white/5 text-zinc-400">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-2xl font-headline font-bold text-white tracking-tighter">System Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tighter">System Configuration</h1>
       </header>
 
-      <div className="space-y-4">
-        <div className="bg-zinc-900 border border-white/5 rounded-[2rem] overflow-hidden">
-          <div className="p-6 border-b border-white/5 flex items-center justify-between hover:bg-white/5 cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
-                <Shield className="w-5 h-5" />
-              </div>
-              <p className="font-bold text-white">Security</p>
-            </div>
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Update PIN</p>
+      <div className="space-y-6 pb-24">
+        <section className="bg-[#161618] border border-white/5 rounded-2xl overflow-hidden p-6 space-y-6">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <Percent className="w-5 h-5 text-purple-500" />
+            <h2 className="font-bold">Tax & Charges</h2>
           </div>
-          <div className="p-6 border-b border-white/5 flex items-center justify-between hover:bg-white/5 cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                <Moon className="w-5 h-5" />
-              </div>
-              <p className="font-bold text-white">Theme</p>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase">GST Rate (%)</label>
+              <Input 
+                type="number" 
+                value={settings.gstRate} 
+                onChange={(e) => setSettings({ ...settings, gstRate: Number(e.target.value) })}
+                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl"
+              />
             </div>
-            <p className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">Dark Mode</p>
-          </div>
-          <div className="p-6 flex items-center justify-between hover:bg-white/5 cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                <Database className="w-5 h-5" />
-              </div>
-              <p className="font-bold text-white">Data</p>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase">UPI Service Fee (%)</label>
+              <Input 
+                type="number" 
+                value={settings.upiRate} 
+                onChange={(e) => setSettings({ ...settings, upiRate: Number(e.target.value) })}
+                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl"
+              />
             </div>
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Export CSV</p>
           </div>
-        </div>
+        </section>
 
-        <div className="bg-zinc-900 border border-white/5 rounded-[2rem] p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
-              <Info className="w-5 h-5" />
+        <section className="bg-[#161618] border border-white/5 rounded-2xl overflow-hidden p-6 space-y-6">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <Globe className="w-5 h-5 text-blue-500" />
+            <h2 className="font-bold">Localization</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase">Platform Name</label>
+              <Input 
+                value={settings.platformName} 
+                onChange={(e) => setSettings({ ...settings, platformName: e.target.value })}
+                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl"
+              />
             </div>
-            <p className="font-bold text-white">About System</p>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase">Currency Symbol</label>
+              <Input 
+                value={settings.currencySymbol} 
+                onChange={(e) => setSettings({ ...settings, currencySymbol: e.target.value })}
+                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl"
+              />
+            </div>
           </div>
-          <div className="space-y-2 px-1">
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Version: 2.1.0 PRO</p>
-            <p className="text-xs text-zinc-500 leading-relaxed font-medium">
-              Professional local-first architecture. All data is encrypted and stored locally on your device for maximum privacy.
-            </p>
-          </div>
-        </div>
+        </section>
+
+        <Button 
+          onClick={handleSave}
+          className="w-full h-14 bg-purple-600 hover:bg-purple-700 rounded-2xl gap-2 font-bold text-lg"
+        >
+          <Save className="w-5 h-5" /> Save Changes
+        </Button>
 
         <button
           onClick={handleLogout}
-          className="w-full p-6 bg-zinc-900 border border-white/5 rounded-[2rem] flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-all font-bold"
+          className="w-full p-6 bg-[#161618] border border-white/5 rounded-2xl flex items-center justify-center gap-3 text-red-500 hover:bg-red-500/10 transition-all font-bold"
         >
           <LogOut className="w-5 h-5" />
           Sign Out

@@ -1,7 +1,26 @@
-import { ClientRecord, Transaction } from './types';
+import { ClientRecord, Transaction, SystemSettings } from './types';
 
 const CLIENTS_KEY = 'investment_pro_clients';
 const SESSION_KEY = 'investment_pro_session';
+const SETTINGS_KEY = 'investment_pro_settings';
+
+const DEFAULT_SETTINGS: SystemSettings = {
+  gstRate: 18,
+  upiRate: 2,
+  currencySymbol: '$',
+  platformName: 'CoinTrack Pro'
+};
+
+export function getSettings(): SystemSettings {
+  if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+  const stored = localStorage.getItem(SETTINGS_KEY);
+  return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+}
+
+export function saveSettings(settings: SystemSettings) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
 
 export function getClients(): ClientRecord[] {
   if (typeof window === 'undefined') return [];
@@ -49,20 +68,39 @@ export function updateClient(id: string, updates: Partial<ClientRecord>) {
   saveClients(updatedClients);
 }
 
-export function addTransaction(clientId: string, type: 'deposit' | 'withdrawal', amount: number) {
+export function addTransaction(
+  clientId: string, 
+  type: 'deposit' | 'withdrawal', 
+  amount: number,
+  fees?: { gst: number, upi: number }
+) {
   const clients = getClients();
   const updatedClients = clients.map(c => {
     if (c.id === clientId) {
+      const totalFees = fees ? fees.gst + fees.upi : 0;
+      const netAmount = type === 'withdrawal' ? amount - totalFees : amount;
+
       const newTransaction: Transaction = {
         id: crypto.randomUUID(),
         type,
         amount,
+        fees: fees ? { ...fees, total: totalFees } : undefined,
+        netAmount,
         date: new Date().toISOString(),
       };
       
       const newTransactions = [...c.transactions, newTransaction];
-      const newInvested = type === 'deposit' ? c.investedAmount + amount : c.investedAmount;
-      const newCurrentValue = type === 'withdrawal' ? c.currentValue - amount : c.currentValue;
+      
+      // Withdrawals reduce current value, Deposits increase invested amount
+      let newInvested = c.investedAmount;
+      let newCurrentValue = c.currentValue;
+
+      if (type === 'deposit') {
+        newInvested += amount;
+        newCurrentValue += amount; // Assuming deposit increases value immediately
+      } else {
+        newCurrentValue -= amount; // Withdrawal reduces total asset value
+      }
 
       return {
         ...c,
