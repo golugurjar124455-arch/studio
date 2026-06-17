@@ -1,8 +1,8 @@
- 'use client';
+'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore as getFirestoreFromSDK, Firestore } from 'firebase/firestore';
-import { getAuth as getAuthFromSDK, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 let app: FirebaseApp;
@@ -15,19 +15,17 @@ export function initializeFirebase() {
   } else {
     app = getApp();
   }
-  db = getFirestoreFromSDK(app);
-  auth = getAuthFromSDK(app);
+
+  db = getFirestore(app);
+  auth = getAuth(app);
 
   return { app, db, auth };
 }
 
-export { FirebaseProvider, useFirebase, useFirebaseApp, useFirestore, useAuth } from './provider';
-export { FirebaseClientProvider } from './client-provider';
-
-export function getFirestore() {
+export function getDb() {
   return initializeFirebase().db;
 }
 
-export function getAuth() {
+export function getAuthInstance() {
   return initializeFirebase().auth;
 }
