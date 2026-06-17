@@ -121,8 +121,6 @@ export function getSession() {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(SESSION_KEY);
   return stored ? JSON.parse(stored) : null;
-}
-
 export function clearSession() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(SESSION_KEY);
