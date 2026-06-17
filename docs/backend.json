@@ -1,0 +1,68 @@
+
+{
+  "entities": {
+    "Investor": {
+      "title": "Investor",
+      "description": "A record of an investor and their portfolio summary.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "platform": { "type": "string", "enum": ["Forex", "Crypto", "Stocks", "Mutual Funds", "Commodities", "Options", "Indices", "Codex", "Other"] },
+        "investedAmount": { "type": "number" },
+        "currentValue": { "type": "number" },
+        "profitLoss": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "platform", "investedAmount", "currentValue"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction (deposit or withdrawal) for an investor.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["deposit", "withdrawal"] },
+        "amount": { "type": "number" },
+        "fees": {
+          "type": "object",
+          "properties": {
+            "gst": { "type": "number" },
+            "upi": { "type": "number" },
+            "total": { "type": "number" }
+          }
+        },
+        "netAmount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "amount", "date"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global system configuration for tax and branding.",
+      "type": "object",
+      "properties": {
+        "gstRate": { "type": "number" },
+        "upiRate": { "type": "number" },
+        "currencySymbol": { "type": "string" },
+        "platformName": { "type": "string" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/investors/{investorId}": {
+      "schema": "Investor",
+      "description": "Collection of investor profiles."
+    },
+    "/investors/{investorId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Sub-collection of transactions for a specific investor."
+    },
+    "/settings/global": {
+      "schema": "Settings",
+      "description": "Global application settings document."
+    }
+  }
+}

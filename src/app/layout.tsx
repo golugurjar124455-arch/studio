@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import { FirebaseClientProvider } from '@/firebase';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'CoinTrack Pro - Professional Investment Gateway',
@@ -27,9 +29,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#f97316" />
       </head>
       <body className="font-body antialiased bg-background text-foreground scroll-hide">
-        <main className="min-h-screen flex flex-col max-w-md mx-auto relative shadow-2xl bg-background overflow-x-hidden border-x border-white/5">
-          {children}
-        </main>
+        <FirebaseClientProvider>
+          <main className="min-h-screen flex flex-col max-w-md mx-auto relative shadow-2xl bg-background overflow-x-hidden border-x border-white/5">
+            {children}
+          </main>
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
