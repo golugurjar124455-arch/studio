@@ -1,40 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bell, Search, X, Wallet, TrendingUp, PieChart as PieChartIcon, Activity, ArrowUpRight } from "lucide-react";
-import { getClients, getSettings } from "@/lib/db";
+import { Bell, Search, Wallet, TrendingUp, PieChart as PieChartIcon, Activity, ArrowUpRight } from "lucide-react";
+import { useCollection, useDoc, useFirestore } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
 import { ClientRecord, SystemSettings } from "@/lib/types";
+import { DEFAULT_SETTINGS } from "@/lib/db";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts";
 
 export default function DashboardPage() {
-  const [clients, setClients] = useState<ClientRecord[]>([]);
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const db = useFirestore();
+  const { data: clients = [], loading: clientsLoading } = useCollection<ClientRecord>(collection(db, 'investors'));
+  const { data: settingsData } = useDoc<SystemSettings>(doc(db, 'settings', 'global'));
 
-  useEffect(() => {
-    setClients(getClients());
-    setSettings(getSettings());
-  }, []);
+  const settings = settingsData || DEFAULT_SETTINGS;
 
-  const totalInvested = clients.reduce((acc, c) => acc + c.investedAmount, 0);
-  const totalValue = clients.reduce((acc, c) => acc + c.currentValue, 0);
+  const totalInvested = clients.reduce((acc, c) => acc + (c.investedAmount || 0), 0);
+  const totalValue = clients.reduce((acc, c) => acc + (c.currentValue || 0), 0);
   const totalProfit = totalValue - totalInvested;
   const profitMargin = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
 
-  const chartData = clients.length > 0 ? clients.map(c => ({
+  const chartData = clients.length > 0 ? clients.slice(0, 6).map(c => ({
     name: c.name.split(' ')[0],
     value: c.currentValue,
   })) : [
-    { name: 'Jan', value: 4000 },
-    { name: 'Feb', value: 3000 },
-    { name: 'Mar', value: 5000 },
-    { name: 'Apr', value: 4500 },
-    { name: 'May', value: 6000 },
+    { name: 'Jan', value: 0 },
+    { name: 'Feb', value: 0 },
   ];
 
-  if (!settings) return null;
-
   const platformCounts = clients.reduce((acc, c) => {
-    acc[c.platform] = (acc[c.platform] || 0) + c.currentValue;
+    acc[c.platform] = (acc[c.platform] || 0) + (c.currentValue || 0);
     return acc;
   }, {} as Record<string, number>);
 
@@ -154,7 +148,6 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             {assetTypes.map(item => {
               const val = platformCounts[item.key] || 0;
-              const percent = totalValue > 0 ? (val / totalValue) * 100 : 0;
               return (
                 <div key={item.label} className="bg-[#0a0a0c] p-3 rounded-xl border border-white/5 space-y-1">
                   <div className="flex items-center gap-2">
