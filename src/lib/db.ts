@@ -4,11 +4,9 @@ import {
   collection, 
   doc, 
   setDoc, 
-  getDoc, 
   updateDoc, 
   deleteDoc, 
-  addDoc,
-  serverTimestamp
+  addDoc
 } from 'firebase/firestore';
 import { getFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -70,6 +68,8 @@ export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'upda
 // Transaction Management
 export function addTransaction(
   clientId: string, 
+  currentInvested: number,
+  currentValue: number,
   type: 'deposit' | 'withdrawal', 
   amount: number,
   fees?: { gst: number, upi: number }
@@ -77,39 +77,43 @@ export function addTransaction(
   const db = getFirestore();
   const clientRef = doc(db, 'investors', clientId);
   
-  getDoc(clientRef).then(snap => {
-    if (snap.exists()) {
-      const c = snap.data();
-      const totalFees = fees ? fees.gst + fees.upi : 0;
-      const netAmount = type === 'withdrawal' ? amount - totalFees : amount;
+  const totalFees = fees ? fees.gst + fees.upi : 0;
+  const netAmount = type === 'withdrawal' ? amount - totalFees : amount;
 
-      const newTransaction = {
-        type,
-        amount,
-        fees: fees ? { ...fees, total: totalFees } : undefined,
-        netAmount,
-        date: new Date().toISOString(),
-      };
-      
-      addDoc(collection(db, 'investors', clientId, 'transactions'), newTransaction);
-      
-      let newInvested = c.investedAmount;
-      let newCurrentValue = c.currentValue;
+  const newTransaction = {
+    type,
+    amount,
+    fees: fees ? { ...fees, total: totalFees } : undefined,
+    netAmount,
+    date: new Date().toISOString(),
+  };
+  
+  addDoc(collection(db, 'investors', clientId, 'transactions'), newTransaction);
+  
+  let newInvested = currentInvested;
+  let newCurrentValue = currentValue;
 
-      if (type === 'deposit') {
-        newInvested += amount;
-        newCurrentValue += amount;
-      } else {
-        newCurrentValue -= amount;
-      }
+  if (type === 'deposit') {
+    newInvested += amount;
+    newCurrentValue += amount;
+  } else {
+    newCurrentValue -= amount;
+  }
 
-      updateDoc(clientRef, {
-        investedAmount: newInvested,
-        currentValue: newCurrentValue,
-        profitLoss: newCurrentValue - newInvested,
-        updatedAt: new Date().toISOString(),
-      });
-    }
+  updateDoc(clientRef, {
+    investedAmount: newInvested,
+    currentValue: newCurrentValue,
+    profitLoss: newCurrentValue - newInvested,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export function updateClient(id: string, data: Partial<ClientRecord>) {
+  const db = getFirestore();
+  const docRef = doc(db, 'investors', id);
+  updateDoc(docRef, {
+    ...data,
+    updatedAt: new Date().toISOString()
   });
 }
 

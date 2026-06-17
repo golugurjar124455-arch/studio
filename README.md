@@ -1,11 +1,11 @@
-# CoinTrack Pro - प्रोफेशनल इन्वेस्टमेंट ट्रैकर
+# CoinTrack Pro - प्रोफेशनल इन्वेस्टमेंट ट्रैकर (Cloud Version)
 
 यह एक "Cloud-First" PWA ऐप है। इसे लाइव (HTTP लिंक पाने के लिए) करने के नीचे दिए गए तरीके अपनाएं।
 
 ## 🚀 GitHub पर कोड कैसे डालें:
 1. **GitHub पर अकाउंट बनाएं:** [github.com](https://github.com/) पर जाएं।
 2. **New Repository:** "New" बटन दबाएं और `cointrack-pro` नाम से रिपॉजिटरी बनाएं।
-3. **फाइलें अपलोड करें:** "uploading an existing file" पर क्लिक करें और अपने प्रोजेक्ट की सभी फाइलें (node_modules को छोड़कर) वहां ड्रैग और ड्रॉप करें।
+3. **फाइलें अपलोड करें:** "uploading an existing file" पर क्लिक करें और अपने प्रोजेक्ट की सभी फाइलें (जैसे `src`, `public`, `package.json` आदि) वहां ड्रैग और ड्रॉप करें।
 4. **Commit:** "Commit changes" बटन दबाएं।
 
 ## 🌐 मुफ़्त में लाइव (Deploy) कैसे करें:
@@ -14,7 +14,8 @@
 1. [Vercel.com](https://vercel.com/) पर जाएं।
 2. 'Add New' -> 'Project' पर क्लिक करें।
 3. अपनी GitHub रिपॉजिटरी को 'Import' करें।
-4. 'Deploy' दबाएं। 1 मिनट में आपको अपना **HTTP लिंक** मिल जाएगा।
+4. **Environment Variables:** डिप्लॉयमेंट के दौरान `NEXT_PUBLIC_FIREBASE_PROJECT_ID` जैसी वैल्यूज डालें (अगर आपने .env इस्तेमाल किया है)।
+5. 'Deploy' दबाएं। 1 मिनट में आपको अपना **HTTP लिंक** मिल जाएगा।
 
 ### तरीका 2: Firebase App Hosting
 1. Firebase Console में 'App Hosting' चुनें।
@@ -23,7 +24,8 @@
 
 ## 📱 मोबाइल पर ऐप कैसे इंस्टॉल करें:
 1. अपने मोबाइल के Chrome ब्राउज़र में अपना लाइव लिंक खोलें।
-2. सेटिंग्स में जाकर **"Add to Home Screen"** चुनें।
+2. ब्राउज़र मेनू (तीन बिंदु) में जाकर **"Add to Home Screen"** चुनें।
+3. अब यह आपके फोन में एक असली ऐप की तरह काम करेगा।
 
 ## 🔑 लॉगिन: admin / admin
-## ⚙️ एडमिन कंट्रोल: 'Admin' बटन से GST/UPI चार्ज बदलें।
+## ⚙️ एडमिन कंट्रोल: 'Admin' बटन से GST/UPI चार्ज और प्लेटफॉर्म का नाम बदलें।
