@@ -1,11 +1,11 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Edit, Phone, Wallet, TrendingUp, Sparkles, Loader2, TrendingDown } from "lucide-react";
+import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, Sparkles, TrendingDown } from "lucide-react";
 import { getClients, deleteClient } from "@/lib/db";
 import { ClientRecord } from "@/lib/types";
-import { generateInvestmentNarrative } from "@/ai/flows/generate-investment-narrative-flow";
 import { Button } from "@/components/ui/button";
 
 export default function ClientDetailsPage() {
@@ -13,7 +13,6 @@ export default function ClientDetailsPage() {
   const router = useRouter();
   const [client, setClient] = useState<ClientRecord | null>(null);
   const [narrative, setNarrative] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const clients = getClients();
@@ -30,23 +29,32 @@ export default function ClientDetailsPage() {
     }
   };
 
-  const generateNarrative = async () => {
-    setIsGenerating(true);
-    try {
-      const result = await generateInvestmentNarrative({
-        investedAmount: client.investedAmount,
-        currentValue: client.currentValue,
-        profitLoss: client.profitLoss
-      });
-      setNarrative(result.narrative);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const performance = (client.profitLoss / client.investedAmount) * 100;
+
+  const generateLocalNarrative = () => {
+    let text = "";
+    const profit = client.profitLoss;
+    const pct = performance.toFixed(2);
+
+    if (profit > 0) {
+      if (performance > 15) {
+        text = `शानदार! आपका पोर्टफोलियो बहुत मजबूत स्थिति में है। आपने ₹${profit.toLocaleString()} का मुनाफा कमाया है, जो कि ${pct}% की असाधारण वृद्धि है। यह आपकी सही निवेश रणनीति को दर्शाता है।`;
+      } else {
+        text = `आपका निवेश सही दिशा में बढ़ रहा है। वर्तमान में आप ₹${profit.toLocaleString()} (${pct}%) के लाभ में हैं। पोर्टफोलियो में स्थिरता बनी हुई है।`;
+      }
+    } else if (profit < 0) {
+      const absProfit = Math.abs(profit);
+      if (performance < -10) {
+        text = `बाजार की मौजूदा अस्थिरता के कारण आपके पोर्टफोलियो में ₹${absProfit.toLocaleString()} (${pct}%) की गिरावट देखी गई है। यह समय धैर्य रखने और लंबी अवधि के लक्ष्यों पर ध्यान केंद्रित करने का है।`;
+      } else {
+        text = `पोर्टफोलियो में ₹${absProfit.toLocaleString()} की मामूली गिरावट है। बाजार के उतार-चढ़ाव को देखते हुए ${pct}% का सुधार सामान्य है। जल्द ही रिकवरी की उम्मीद की जा सकती है।`;
+      }
+    } else {
+      text = "आपका निवेश अभी 'ब्रेक-ईवन' स्तर पर है। कोई लाभ या हानि नहीं हुई है। बाजार की चाल पर नज़र रखना बेहतर होगा।";
+    }
+
+    setNarrative(text);
+  };
 
   return (
     <div className="p-6 space-y-8 animate-in fade-in duration-500">
@@ -121,12 +129,11 @@ export default function ClientDetailsPage() {
             इन्वेस्टमेंट नैरेटिव
           </h3>
           <Button
-            onClick={generateNarrative}
-            disabled={isGenerating}
+            onClick={generateLocalNarrative}
             size="sm"
             className="rounded-xl bg-primary hover:bg-primary/90 text-white px-4 h-10 font-bold"
           >
-            {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : "AI सारांश"}
+            सारांश देखें
           </Button>
         </div>
 
@@ -138,7 +145,7 @@ export default function ClientDetailsPage() {
           </div>
         ) : (
           <div className="p-10 text-center bento-card rounded-[2rem] border-dashed bg-transparent border-white/5">
-            <p className="text-muted-foreground text-sm">क्लाइंट के प्रदर्शन का AI विश्लेषण प्राप्त करने के लिए बटन दबाएं</p>
+            <p className="text-muted-foreground text-sm">क्लाइंट के प्रदर्शन का विश्लेषण प्राप्त करने के लिए बटन दबाएं</p>
           </div>
         )}
       </section>
