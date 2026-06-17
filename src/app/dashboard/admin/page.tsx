@@ -1,135 +1,123 @@
-"use client";
+"use client"; // 👈 यह लाइन सबसे ऊपर होना अनिवार्य है
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ShieldAlert, Percent, Globe, Save, Trash2, LogOut, Users, TrendingUp } from "lucide-react";
-import { useDoc, useCollection, useFirestore } from "@/firebase";
-import { doc, collection } from "firebase/firestore";
-import { saveSettings, clearSession, DEFAULT_SETTINGS } from "@/lib/db";
-import { SystemSettings, ClientRecord } from "@/lib/types";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import React, { useState, useEffect } from 'react';
 
-export default function AdminPanelPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const db = useFirestore();
-  const { data: settingsData } = useDoc<SystemSettings>(doc(db, 'settings', 'global'));
-  const { data: clients = [] } = useCollection<ClientRecord>(collection(db, 'investors'));
-  
-  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
+// 1. FIREBASE IMPORTS (सभी इम्पोर्ट्स अब इसी फाइल में हैं)
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
+// 2. FIREBASE CONFIGURATION
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+// Next.js के लिए सुरक्षित रूप से Firebase इनिशियलाइज़ करना
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+
+// 3. SUB-COMPONENTS (छोटे हिस्से जो इसी पेज पर काम आएंगे)
+const AdminHeader = () => {
+  return (
+    <div className="w-full p-4 bg-gray-900 text-white flex justify-between items-center shadow-md">
+      <h1 className="text-xl font-bold tracking-wide">Studio Admin Dashboard</h1>
+      <div className="text-sm bg-green-600 px-3 py-1 rounded-full text-white font-medium">
+        Live Status: Connected
+      </div>
+    </div>
+  );
+};
+
+const DataRow = ({ item, index }: { item: any; index: number }) => {
+  return (
+    <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+      <td className="p-3 text-sm text-gray-700">{index + 1}</td>
+      <td className="p-3 text-sm text-gray-900 font-medium">{item.name || 'No Name'}</td>
+      <td className="p-3 text-sm text-gray-600">{item.email || 'No Email'}</td>
+      <td className="p-3 text-sm text-gray-600">{item.role || 'User'}</td>
+    </tr>
+  );
+};
+
+
+// 4. MAIN PAGE COMPONENT (मुख्य एडमिन पेज जो लोड होगा)
+export default function AdminPage() {
+  const [dataList, setDataList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Firebase Firestore से डेटा लाने का लॉजिक
   useEffect(() => {
-    if (settingsData) {
-      setSettings(settingsData);
-    }
-  }, [settingsData]);
+    const fetchData = async () => {
+      try {
+        // उदाहरण के लिए 'users' कलेक्शन से डेटा ला रहे हैं
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const items: any[] = [];
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+        setDataList(items);
+      } catch (error) {
+        console.error("Error fetching data from Firestore: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSave = () => {
-    saveSettings(settings);
-    toast({
-      title: "सिस्टम अपडेट सफल",
-      description: "ग्लोबल रेट्स और ब्रांडिंग अपडेट कर दी गई है।",
-    });
-  };
-
-  const handleLogout = () => {
-    clearSession();
-    router.push("/");
-  };
+    fetchData();
+  );
 
   return (
-    <div className="p-6 space-y-8 bg-[#0a0a0c] min-h-screen text-white pb-32">
-      <header className="space-y-1">
-        <div className="flex items-center gap-2 text-orange-500">
-          <ShieldAlert className="w-6 h-6" />
-          <h1 className="text-3xl font-bold tracking-tighter uppercase">Admin Center</h1>
+    <div className="min-h-screen bg-gray-100 font-sans">
+      {/* हेडर कॉम्पोनेंट */}
+      <AdminHeader />
+
+      {/* मुख्य कंटेंट एरिया */}
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Welcome Back, Admin</h2>
+          <p className="text-sm text-gray-500">यहाँ से आप अपने स्टूडियो प्रोजेक्ट का पूरा डेटा मैनेज कर सकते हैं।</p>
         </div>
-        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Root System Access • v2.0</p>
-      </header>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[#161618] p-5 rounded-2xl border border-white/5 space-y-1">
-          <div className="flex items-center gap-2 text-blue-400">
-            <Users className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Nodes</span>
+        {/* डेटा टेबल कार्ड */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 bg-gray-50 border-b border-gray-200">
+            <h3 className="font-medium text-gray-700">Registered Users / Studio Data</h3>
           </div>
-          <p className="text-2xl font-bold">{clients.length}</p>
-        </div>
-        <div className="bg-[#161618] p-5 rounded-2xl border border-white/5 space-y-1">
-          <div className="flex items-center gap-2 text-green-400">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Uptime</span>
-          </div>
-          <p className="text-2xl font-bold">99.9%</p>
-        </div>
-      </div>
 
-      <div className="space-y-6">
-        <section className="bg-[#161618] border border-white/5 rounded-3xl p-6 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <Percent className="w-5 h-5 text-orange-500" />
-            <h2 className="font-bold">Settlement Rates</h2>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase">GST Rate (%)</label>
-              <Input 
-                type="number" 
-                value={settings.gstRate} 
-                onChange={(e) => setSettings({ ...settings, gstRate: Number(e.target.value) })}
-                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl text-white font-bold"
-              />
+          {loading ? (
+            <div className="p-10 text-center text-gray-500 font-medium animate-pulse">
+              Loading dashboard data...
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase">UPI Fee (%)</label>
-              <Input 
-                type="number" 
-                value={settings.upiRate} 
-                onChange={(e) => setSettings({ ...settings, upiRate: Number(e.target.value) })}
-                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl text-white font-bold"
-              />
+          ) : dataList.length === 0 ? (
+            <div className="p-10 text-center text-gray-500">
+              कोई डेटा नहीं मिला। कृपया Firebase Firestore चेक करें।
             </div>
-          </div>
-        </section>
-
-        <section className="bg-[#161618] border border-white/5 rounded-3xl p-6 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <Globe className="w-5 h-5 text-blue-500" />
-            <h2 className="font-bold">Branding</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase">Platform Name</label>
-              <Input 
-                value={settings.platformName} 
-                onChange={(e) => setSettings({ ...settings, platformName: e.target.value })}
-                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl text-white font-bold"
-              />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 text-gray-700 font-semibold border-b border-gray-200">
+                    <th className="p-3 text-sm">S.No</th>
+                    <th className="p-3 text-sm">Name</th>
+                    <th className="p-3 text-sm">Email</th>
+                    <th className="p-3 text-sm">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dataList.map((item, index) => (
+                    <DataRow key={item.id || index} item={item} index={index} />
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase">Currency Symbol</label>
-              <Input 
-                value={settings.currencySymbol} 
-                onChange={(e) => setSettings({ ...settings, currencySymbol: e.target.value })}
-                className="bg-[#0a0a0c] border-white/5 h-12 rounded-xl text-white font-bold"
-              />
-            </div>
-          </div>
-        </section>
-
-        <div className="flex flex-col gap-4">
-          <Button onClick={handleSave} className="h-16 bg-orange-600 hover:bg-orange-700 rounded-[2rem] gap-2 font-bold text-lg shadow-xl shadow-orange-500/20">
-            <Save className="w-6 h-6" /> Commit Changes
-          </Button>
-
-          <Button onClick={handleLogout} variant="ghost" className="h-16 bg-zinc-900 border border-white/5 hover:bg-zinc-800 rounded-[2rem] gap-2 font-bold text-zinc-400">
-            <LogOut className="w-6 h-6" /> Logout Session
-          </Button>
+          )}
         </div>
       </div>
     </div>
