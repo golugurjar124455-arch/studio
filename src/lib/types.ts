@@ -1,5 +1,5 @@
 export interface Transaction {
-  id: string;
+  id?: string;
   type: 'deposit' | 'withdrawal';
   amount: number;
   fees?: {
@@ -11,14 +11,6 @@ export interface Transaction {
   date: string;
 }
 
-export interface ChartDataPoint {
-  date: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
-
 export interface ClientRecord {
   id: string;
   name: string;
@@ -27,7 +19,6 @@ export interface ClientRecord {
   investedAmount: number;
   currentValue: number;
   profitLoss: number;
-  transactions: Transaction[];
   updatedAt: string;
 }
 
@@ -36,9 +27,4 @@ export interface SystemSettings {
   upiRate: number;
   currencySymbol: string;
   platformName: string;
-}
-
-export interface UserSession {
-  username: string;
-  isLoggedIn: boolean;
 }

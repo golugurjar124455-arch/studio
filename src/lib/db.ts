@@ -22,7 +22,6 @@ export const DEFAULT_SETTINGS: SystemSettings = {
   platformName: 'CoinTrack Pro'
 };
 
-// Global Settings Management
 export function saveSettings(settings: SystemSettings) {
   const db = getFirestore();
   const docRef = doc(db, 'settings', 'global');
@@ -37,8 +36,7 @@ export function saveSettings(settings: SystemSettings) {
     });
 }
 
-// Add New Client
-export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'updatedAt' | 'transactions'>) {
+export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'updatedAt'>) {
   const db = getFirestore();
   const profitLoss = client.currentValue - client.investedAmount;
   const data = {
@@ -48,14 +46,6 @@ export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'upda
   };
 
   addDoc(collection(db, 'investors'), data)
-    .then(async (clientRef) => {
-      const initialTransaction = {
-        type: 'deposit',
-        amount: client.investedAmount,
-        date: new Date().toISOString(),
-      };
-      addDoc(collection(db, 'investors', clientRef.id, 'transactions'), initialTransaction);
-    })
     .catch(async () => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'investors',
@@ -65,7 +55,6 @@ export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'upda
     });
 }
 
-// Transaction Management
 export function addTransaction(
   clientId: string, 
   currentInvested: number,
@@ -83,7 +72,7 @@ export function addTransaction(
   const newTransaction = {
     type,
     amount,
-    fees: fees ? { ...fees, total: totalFees } : undefined,
+    fees: fees ? { ...fees, total: totalFees } : null,
     netAmount,
     date: new Date().toISOString(),
   };
@@ -117,29 +106,20 @@ export function updateClient(id: string, data: Partial<ClientRecord>) {
   });
 }
 
-// Delete Client
 export function deleteClient(id: string) {
   const db = getFirestore();
   deleteDoc(doc(db, 'investors', id));
 }
 
-// Reset System (Delete all investors)
-export function resetSystem() {
-  // This is a simplified reset for demo purposes
-  // In a real app, you would iterate and delete all docs
-  alert("Purge sequence initiated. Data is being cleared from the cloud.");
+export function setSession(username: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ username, isLoggedIn: true }));
 }
 
-// Session Management
 export function getSession() {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(SESSION_KEY);
   return stored ? JSON.parse(stored) : null;
-}
-
-export function setSession(username: string) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ username, isLoggedIn: true }));
 }
 
 export function clearSession() {
