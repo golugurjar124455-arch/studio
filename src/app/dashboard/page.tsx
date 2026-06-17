@@ -1,11 +1,13 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, UserPlus, Search, Settings, ArrowUpRight, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Users, UserPlus, TrendingUp, TrendingDown, Wallet, ArrowUpRight, PieChart } from "lucide-react";
 import { getClients } from "@/lib/db";
 import { ClientRecord } from "@/lib/types";
 import { DemoModeBadge } from "@/components/ui/demo-mode-badge";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts";
 
 export default function DashboardPage() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -23,6 +25,15 @@ export default function DashboardPage() {
     { label: "कुल निवेश", value: `₹${totalInvested.toLocaleString()}`, icon: Wallet, color: "text-purple-400" },
     { label: "कुल लाभ/हानि", value: `₹${totalProfit.toLocaleString()}`, icon: totalProfit >= 0 ? TrendingUp : TrendingDown, color: totalProfit >= 0 ? "text-emerald-400" : "text-rose-400" },
   ];
+
+  // Chart data for top 5 clients by performance
+  const chartData = clients
+    .map(c => ({
+      name: c.name.split(' ')[0],
+      profit: c.profitLoss,
+    }))
+    .sort((a, b) => b.profit - a.profit)
+    .slice(0, 5);
 
   return (
     <div className="p-6 space-y-8 scroll-hide">
@@ -49,7 +60,6 @@ export default function DashboardPage() {
           </div>
         ))}
 
-        {/* Action Card: Add Client */}
         <Link
           href="/dashboard/add"
           className="bento-card p-5 rounded-[2rem] bg-primary group flex flex-col justify-between h-40 animate-staggered-fade-in"
@@ -65,7 +75,34 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <section className="space-y-4 animate-staggered-fade-in" style={{ animationDelay: '400ms' }}>
+      {/* Analytics Chart */}
+      {clients.length > 0 && (
+        <section className="bento-card p-6 rounded-[2.5rem] bg-card/30 space-y-4 animate-staggered-fade-in" style={{ animationDelay: '400ms' }}>
+          <div className="flex items-center gap-2">
+            <PieChart className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-bold text-white uppercase tracking-widest">परफॉरमेंस एनालिसिस</h3>
+          </div>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                  contentStyle={{ backgroundColor: '#1a1424', border: 'none', borderRadius: '12px', fontSize: '12px' }}
+                />
+                <Bar dataKey="profit" radius={[8, 8, 0, 0]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? '#10b981' : '#f43f5e'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-center text-muted-foreground">शीर्ष 5 क्लाइंट्स का लाभ/हानि विवरण</p>
+        </section>
+      )}
+
+      <section className="space-y-4 animate-staggered-fade-in" style={{ animationDelay: '500ms' }}>
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-headline font-bold text-white">हाल के क्लाइंट</h3>
           <Link href="/dashboard/clients" className="text-xs text-primary font-medium hover:underline">सभी देखें</Link>

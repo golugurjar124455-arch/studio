@@ -3,10 +3,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, Sparkles, TrendingDown } from "lucide-react";
+import { ArrowLeft, Trash2, Phone, Wallet, TrendingUp, Sparkles, TrendingDown, Edit2 } from "lucide-react";
 import { getClients, deleteClient } from "@/lib/db";
 import { ClientRecord } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function ClientDetailsPage() {
   const { id } = useParams();
@@ -38,19 +39,19 @@ export default function ClientDetailsPage() {
 
     if (profit > 0) {
       if (performance > 15) {
-        text = `शानदार! आपका पोर्टफोलियो बहुत मजबूत स्थिति में है। आपने ₹${profit.toLocaleString()} का मुनाफा कमाया है, जो कि ${pct}% की असाधारण वृद्धि है। यह आपकी सही निवेश रणनीति को दर्शाता है।`;
+        text = `शानदार! ${client.name} का पोर्टफोलियो बहुत मजबूत स्थिति में है। इन्होंने ₹${profit.toLocaleString()} का मुनाफा कमाया है, जो कि ${pct}% की असाधारण वृद्धि है। यह सही निवेश रणनीति को दर्शाता है।`;
       } else {
-        text = `आपका निवेश सही दिशा में बढ़ रहा है। वर्तमान में आप ₹${profit.toLocaleString()} (${pct}%) के लाभ में हैं। पोर्टफोलियो में स्थिरता बनी हुई है।`;
+        text = `${client.name} का निवेश सही दिशा में बढ़ रहा है। वर्तमान में ये ₹${profit.toLocaleString()} (${pct}%) के लाभ में हैं। पोर्टफोलियो में स्थिरता बनी हुई है।`;
       }
     } else if (profit < 0) {
       const absProfit = Math.abs(profit);
       if (performance < -10) {
-        text = `बाजार की मौजूदा अस्थिरता के कारण आपके पोर्टफोलियो में ₹${absProfit.toLocaleString()} (${pct}%) की गिरावट देखी गई है। यह समय धैर्य रखने और लंबी अवधि के लक्ष्यों पर ध्यान केंद्रित करने का है।`;
+        text = `बाजार की मौजूदा अस्थिरता के कारण पोर्टफोलियो में ₹${absProfit.toLocaleString()} (${pct}%) की गिरावट देखी गई है। यह समय धैर्य रखने और लंबी अवधि के लक्ष्यों पर ध्यान केंद्रित करने का है।`;
       } else {
         text = `पोर्टफोलियो में ₹${absProfit.toLocaleString()} की मामूली गिरावट है। बाजार के उतार-चढ़ाव को देखते हुए ${pct}% का सुधार सामान्य है। जल्द ही रिकवरी की उम्मीद की जा सकती है।`;
       }
     } else {
-      text = "आपका निवेश अभी 'ब्रेक-ईवन' स्तर पर है। कोई लाभ या हानि नहीं हुई है। बाजार की चाल पर नज़र रखना बेहतर होगा।";
+      text = "निवेश अभी 'ब्रेक-ईवन' स्तर पर है। कोई लाभ या हानि नहीं हुई है। बाजार की चाल पर नज़र रखना बेहतर होगा।";
     }
 
     setNarrative(text);
@@ -63,6 +64,9 @@ export default function ClientDetailsPage() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         <div className="flex gap-2">
+          <Link href={`/dashboard/clients/${client.id}/edit`} className="p-3 rounded-2xl bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+            <Edit2 className="w-5 h-5" />
+          </Link>
           <button onClick={handleDelete} className="p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors">
             <Trash2 className="w-5 h-5" />
           </button>
