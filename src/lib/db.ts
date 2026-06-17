@@ -8,23 +8,23 @@ import {
   updateDoc, 
   deleteDoc, 
   addDoc,
-  Firestore
+  serverTimestamp
 } from 'firebase/firestore';
 import { getFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { ClientRecord, Transaction, SystemSettings } from './types';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { ClientRecord, SystemSettings } from './types';
 
 const SESSION_KEY = 'investment_pro_session';
 
 export const DEFAULT_SETTINGS: SystemSettings = {
   gstRate: 18,
   upiRate: 2,
-  currencySymbol: '$',
+  currencySymbol: '₹',
   platformName: 'CoinTrack Pro'
 };
 
-// Save settings to Firestore
+// Global Settings Management
 export function saveSettings(settings: SystemSettings) {
   const db = getFirestore();
   const docRef = doc(db, 'settings', 'global');
@@ -39,7 +39,7 @@ export function saveSettings(settings: SystemSettings) {
     });
 }
 
-// Create a new client in Firestore
+// Add New Client
 export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'updatedAt' | 'transactions'>) {
   const db = getFirestore();
   const profitLoss = client.currentValue - client.investedAmount;
@@ -67,25 +67,7 @@ export function addClient(client: Omit<ClientRecord, 'id' | 'profitLoss' | 'upda
     });
 }
 
-// Update client data in Firestore
-export function updateClient(id: string, updates: Partial<ClientRecord>) {
-  const db = getFirestore();
-  const docRef = doc(db, 'investors', id);
-  
-  updateDoc(docRef, {
-    ...updates,
-    updatedAt: new Date().toISOString()
-  })
-  .catch(async () => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: docRef.path,
-      operation: 'update',
-      requestResourceData: updates,
-    }));
-  });
-}
-
-// Add a transaction for a client
+// Transaction Management
 export function addTransaction(
   clientId: string, 
   type: 'deposit' | 'withdrawal', 
@@ -109,14 +91,7 @@ export function addTransaction(
         date: new Date().toISOString(),
       };
       
-      addDoc(collection(db, 'investors', clientId, 'transactions'), newTransaction)
-        .catch(async () => {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-             path: `investors/${clientId}/transactions`,
-             operation: 'create',
-             requestResourceData: newTransaction
-           }));
-        });
+      addDoc(collection(db, 'investors', clientId, 'transactions'), newTransaction);
       
       let newInvested = c.investedAmount;
       let newCurrentValue = c.currentValue;
@@ -138,29 +113,13 @@ export function addTransaction(
   });
 }
 
-// Remove a client
+// Delete Client
 export function deleteClient(id: string) {
   const db = getFirestore();
-  const docRef = doc(db, 'investors', id);
-  deleteDoc(docRef)
-    .catch(async () => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: docRef.path,
-        operation: 'delete'
-      }));
-    });
+  deleteDoc(doc(db, 'investors', id));
 }
 
-// Reset system
-export async function resetSystem() {
-  const db = getFirestore();
-  // This is a simplified reset for a demo app
-  deleteDoc(doc(db, 'settings', 'global')).then(() => {
-    window.location.reload();
-  });
-}
-
-// Session Helpers
+// Session Management
 export function getSession() {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(SESSION_KEY);
