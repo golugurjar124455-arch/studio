@@ -1,7 +1,7 @@
 'use client';
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyAR3Qc7tC-Ebgtk9EIZhuHQvnF6goor1PA",
   authDomain: "studio-7052712596-ce1ac.firebaseapp.com",
   projectId: "studio-7052712596-ce1ac",
   storageBucket: "studio-7052712596-ce1ac.appspot.com",
