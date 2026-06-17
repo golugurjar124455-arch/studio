@@ -1,22 +1,20 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ShieldAlert, 
-  Settings2, 
-  Database, 
   Percent, 
   Globe, 
   Save, 
   Trash2, 
   LogOut, 
   Users, 
-  TrendingUp, 
-  BarChart 
+  TrendingUp 
 } from "lucide-react";
-import { getSettings, saveSettings, resetSystem, getClients, clearSession } from "@/lib/db";
+import { useDoc, useCollection, useFirestore } from "@/firebase";
+import { doc, collection } from "firebase/firestore";
+import { saveSettings, clearSession, resetSystem, DEFAULT_SETTINGS } from "@/lib/db";
 import { SystemSettings, ClientRecord } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,30 +35,30 @@ import {
 export default function AdminPanelPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [clients, setClients] = useState<ClientRecord[]>([]);
+  const db = useFirestore();
+  const { data: settingsData } = useDoc<SystemSettings>(doc(db, 'settings', 'global'));
+  const { data: clients = [] } = useCollection<ClientRecord>(collection(db, 'investors'));
+  
+  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
-    setSettings(getSettings());
-    setClients(getClients());
-  }, []);
+    if (settingsData) {
+      setSettings(settingsData);
+    }
+  }, [settingsData]);
 
   const handleSave = () => {
-    if (settings) {
-      saveSettings(settings);
-      toast({
-        title: "System Update Successful",
-        description: "Global settlement rates and branding updated.",
-      });
-    }
+    saveSettings(settings);
+    toast({
+      title: "System Update Successful",
+      description: "Global settlement rates and branding updated.",
+    });
   };
 
   const handleLogout = () => {
     clearSession();
     router.push("/");
   };
-
-  if (!settings) return null;
 
   return (
     <div className="p-6 space-y-8 bg-[#0a0a0c] min-h-screen text-white pb-32">
@@ -150,36 +148,6 @@ export default function AdminPanelPage() {
           </div>
         </section>
 
-        {/* Danger Zone */}
-        <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 space-y-6">
-          <div className="flex items-center gap-3 border-b border-red-500/10 pb-4">
-            <Database className="w-5 h-5 text-red-500" />
-            <h2 className="font-bold text-red-500">Nuclear Maintenance</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full h-14 rounded-2xl gap-2 font-bold uppercase tracking-tighter">
-                  <Trash2 className="w-4 h-4" /> Purge System Data
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-[#161618] border-white/5 text-white rounded-3xl">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Initialize System Purge?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-zinc-500">
-                    This will permanently erase all investors, transactions, and custom settings. This protocol is irreversible.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-zinc-800 border-none rounded-xl">Abort</AlertDialogCancel>
-                  <AlertDialogAction onClick={resetSystem} className="bg-red-600 hover:bg-red-700 rounded-xl">Confirm Purge</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </section>
-
         <div className="grid grid-cols-1 gap-4">
           <Button 
             onClick={handleSave}
@@ -188,10 +156,30 @@ export default function AdminPanelPage() {
             <Save className="w-6 h-6" /> Commit Global Changes
           </Button>
 
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="h-16 bg-zinc-900 border border-white/5 hover:bg-red-500/10 rounded-[2rem] gap-2 font-bold text-red-500">
+                <Trash2 className="w-6 h-6" /> Purge System Data
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-[#161618] border-white/5 text-white rounded-3xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Initialize System Purge?</AlertDialogTitle>
+                <AlertDialogDescription className="text-zinc-500">
+                  This will permanently erase all investors and transactions from the cloud database. This protocol is irreversible.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-zinc-800 border-none rounded-xl text-white">Abort</AlertDialogCancel>
+                <AlertDialogAction onClick={resetSystem} className="bg-red-600 hover:bg-red-700 rounded-xl">Confirm Purge</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Button 
             onClick={handleLogout}
             variant="ghost"
-            className="h-16 bg-zinc-900 border border-white/5 hover:bg-red-500/10 rounded-[2rem] gap-2 font-bold text-red-500"
+            className="h-16 bg-zinc-900 border border-white/5 hover:bg-zinc-800 rounded-[2rem] gap-2 font-bold text-zinc-400"
           >
             <LogOut className="w-6 h-6" /> Terminate Session
           </Button>

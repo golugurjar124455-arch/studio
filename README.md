@@ -14,8 +14,7 @@
 1. [Vercel.com](https://vercel.com/) पर जाएं।
 2. 'Add New' -> 'Project' पर क्लिक करें।
 3. अपनी GitHub रिपॉजिटरी को 'Import' करें।
-4. **Environment Variables:** डिप्लॉयमेंट के दौरान `NEXT_PUBLIC_FIREBASE_PROJECT_ID` जैसी वैल्यूज डालें (अगर आपने .env इस्तेमाल किया है)।
-5. 'Deploy' दबाएं। 1 मिनट में आपको अपना **HTTP लिंक** मिल जाएगा।
+4. 'Deploy' दबाएं। 1 मिनट में आपको अपना **HTTP लिंक** मिल जाएगा।
 
 ### तरीका 2: Firebase App Hosting
 1. Firebase Console में 'App Hosting' चुनें।

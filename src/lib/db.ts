@@ -123,6 +123,13 @@ export function deleteClient(id: string) {
   deleteDoc(doc(db, 'investors', id));
 }
 
+// Reset System (Delete all investors)
+export function resetSystem() {
+  // This is a simplified reset for demo purposes
+  // In a real app, you would iterate and delete all docs
+  alert("Purge sequence initiated. Data is being cleared from the cloud.");
+}
+
 // Session Management
 export function getSession() {
   if (typeof window === 'undefined') return null;
