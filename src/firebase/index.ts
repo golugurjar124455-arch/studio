@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getFirestore as getFirestoreFromSDK, Firestore } from 'firebase/firestore';
