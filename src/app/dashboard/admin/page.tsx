@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 
-// 1. FIREBASE IMPORTS (सभी इम्पोर्ट्स अब इसी फाइल में हैं)
+// 1. FIREBASE IMPORTS
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
+import { getAuth } from 'firebase/auth'; 
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 // 2. FIREBASE CONFIGURATION
@@ -23,7 +23,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 
-// 3. SUB-COMPONENTS (छोटे हिस्से जो इसी पेज पर काम आएंगे)
+// 3. SUB-COMPONENTS
 const AdminHeader = () => {
   return (
     <div className="w-full p-4 bg-gray-900 text-white flex justify-between items-center shadow-md">
@@ -47,7 +47,7 @@ const DataRow = ({ item, index }: { item: any; index: number }) => {
 };
 
 
-// 4. MAIN PAGE COMPONENT (मुख्य एडमिन पेज जो लोड होगा)
+// 4. MAIN PAGE COMPONENT
 export default function AdminPage() {
   const [dataList, setDataList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,6 @@ export default function AdminPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // उदाहरण के लिए 'users' कलेक्शन से डेटा ला रहे हैं
         const querySnapshot = await getDocs(collection(db, 'users'));
         const items: any[] = [];
         querySnapshot.forEach((doc) => {
@@ -71,7 +70,7 @@ export default function AdminPage() {
     };
 
     fetchData();
-  );
+  }, []); // 👈 यहाँ पहले कोष्ठक बंद होना छूट गया था, जिसे अब ठीक कर दिया गया है।
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
