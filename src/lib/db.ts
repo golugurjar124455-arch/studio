@@ -120,6 +120,13 @@ export function deleteClient(id: string) {
   saveClients(clients.filter(c => c.id !== id));
 }
 
+export function resetSystem() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(CLIENTS_KEY);
+  localStorage.removeItem(SETTINGS_KEY);
+  window.location.reload();
+}
+
 export function getSession() {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(SESSION_KEY);
