@@ -1,4 +1,4 @@
-"use client"; // 👈 यह लाइन सबसे ऊपर होना अनिवार्य है
+"use client"; // 👈 यह सबसे पहली लाइन होनी चाहिए
 
 import React, { useState, useEffect } from 'react';
 
@@ -7,23 +7,23 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth'; 
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
-// 2. FIREBASE CONFIGURATION
+// 2. REAL FIREBASE CONFIGURATION (आपकी असली डिटेल्स सेट कर दी गई हैं)
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyARRQc7tC-HbgTk9XIZMu4Q",
+  authDomain: "studio-7862712596-ce1ac.firebaseapp.com",
+  projectId: "studio-7862712596-ce1ac",
+  storageBucket: "studio-7862712596-ce1ac.appspot.com",
+  messagingSenderId: "45378465643",
+  appId: "1:45378465643:web:544f7632173"
 };
 
-// Next.js के लिए सुरक्षित रूप से Firebase इनिशियलाइज़ करना
+// Next.js में डुप्लिकेट ऐप एरर से बचने के लिए सेफ इनिशियलाइजेशन
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 
-// 3. SUB-COMPONENTS
+// 3. SUB-COMPONENTS (छोटे हिस्से)
 const AdminHeader = () => {
   return (
     <div className="w-full p-4 bg-gray-900 text-white flex justify-between items-center shadow-md">
@@ -47,12 +47,12 @@ const DataRow = ({ item, index }: { item: any; index: number }) => {
 };
 
 
-// 4. MAIN PAGE COMPONENT
+// 4. MAIN PAGE COMPONENT (मुख्य एडमिन पेज)
 export default function AdminPage() {
   const [dataList, setDataList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Firebase Firestore से डेटा लाने का लॉजिक
+  // Firestore से डेटा लोड करने का लॉजिक
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,21 +70,21 @@ export default function AdminPage() {
     };
 
     fetchData();
-  }, []); // 👈 यहाँ पहले कोष्ठक बंद होना छूट गया था, जिसे अब ठीक कर दिया गया है।
+  }, []); // 👈 सही सिंटैक्स ब्रैकेट ब्रैकेट यहाँ बंद है
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      {/* हेडर कॉम्पोनेंट */}
+      {/* हेडर */}
       <AdminHeader />
 
-      {/* मुख्य कंटेंट एरिया */}
+      {/* मुख्य डैशबोर्ड एरिया */}
       <div className="p-6 max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">Welcome Back, Admin</h2>
           <p className="text-sm text-gray-500">यहाँ से आप अपने स्टूडियो प्रोजेक्ट का पूरा डेटा मैनेज कर सकते हैं।</p>
         </div>
 
-        {/* डेटा टेबल कार्ड */}
+        {/* डेटा टेबल */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="p-4 bg-gray-50 border-b border-gray-200">
             <h3 className="font-medium text-gray-700">Registered Users / Studio Data</h3>
